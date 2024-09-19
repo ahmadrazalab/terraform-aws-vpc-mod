@@ -1,113 +1,75 @@
-# Enterprize-tf-lab Terraform Setup
+# VPC Module
 
-This document outlines the steps to create the infrastructure for the enterprize-tf-lab project using Terraform.
+This Terraform module creates a Virtual Private Cloud (VPC) in AWS with public and private subnets across multiple Availability Zones.
 
-## 1. AMI Creation
+## Resources Created
 
-### Frontend-application AMI
-1. **Create an instance**
-2. **Install dependencies**
-3. **Setup application**
-4. **Create AMI**
+- VPC
+- Internet Gateway
+- NAT Gateway
+- Public and Private Subnets
+- Route Tables (Public and Private)
 
-### Magic-application AMI
-1. **Create an instance**
-2. **Install dependencies**
-3. **Setup application**
-4. **Create AMI**
+## Usage
 
-### Backend-application AMI
-1. **Create an instance**
-2. **Install dependencies**
-3. **Setup application**
-4. **Create AMI**
+```hcl
+module "vpc" {
+  source = "path/to/vpc/module"
 
-## 2. Keypair
+  vpc_cidr             = "10.0.0.0/16"
+  public_subnet_cidrs  = ["10.0.0.0/20", "10.0.16.0/20", "10.0.32.0/20"]
+  private_subnet_cidrs = ["10.0.48.0/20", "10.0.64.0/20", "10.0.80.0/20"]
+  availability_zones   = ["us-west-2a", "us-west-2b", "us-west-2c"]
+}
+```
 
-### Create a Keypair
-- Generate a keypair for EC2 instances.
+## Inputs
 
-## 3. IAM Users and Policies
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| vpc_cidr | CIDR block for the VPC | `string` | `"10.0.0.0/16"` | no |
+| public_subnet_cidrs | CIDR blocks for public subnets | `list(string)` | `["10.0.0.0/20", "10.0.16.0/20", "10.0.32.0/20"]` | no |
+| private_subnet_cidrs | CIDR blocks for private subnets | `list(string)` | `["10.0.48.0/20", "10.0.64.0/20", "10.0.80.0/20"]` | no |
+| availability_zones | List of AZ names or IDs in the region | `list(string)` | n/a | yes |
+| enable_dns_hostnames | Enable DNS hostnames in the VPC | `bool` | `true` | no |
+| enable_dns_support | Enable DNS support in the VPC | `bool` | `true` | no |
 
-### Create IAM Users
-1. **data-s3-keys**: Permissions: `put`, `get`
-2. **logs-s3-keys**: Permissions: `put`, `get`
-3. **uat-s3-keys**: Permissions: `put`, `get`, `delete`
+#### 3. **Architecture Design**
 
-## 4. EC2 Instances
+Here’s a simple architecture for your VPC:
 
-### Create EC2 Instances from AMI
-- Launch 2 instances from the magic and frontend AMIs.
+- **VPC (10.0.0.0/16)**
+  - **Public Subnet 1** in **AZ1** (`10.0.0.0/20`)
+  - **Public Subnet 2** in **AZ2** (`10.0.16.0/20`)
+  - **Public Subnet 3** in **AZ3** (`10.0.32.0/20`)
+  - **Private Subnet 1** in **AZ1** (`10.0.48.0/20`)
+  - **Private Subnet 2** in **AZ2** (`10.0.64.0/20`)
+  - **Private Subnet 3** in **AZ3** (`10.0.80.0/20`)
 
-## 5. Security Groups
+#### 4. **Additional Components to Consider**
 
-### Create Security Groups
-1. **ec2-sg**: Security group for EC2 instances.
-2. **alb-sg**: Security group for the load balancer.
-3. **rds-sg**: Security group for RDS instances.
+- **Internet Gateway (IGW):** Attach an Internet Gateway to your VPC to allow communication with the internet. Only the public subnets will have routes to the IGW.
+  
+- **NAT Gateway or NAT Instance:** For instances in private subnets that need to access the internet for updates, a NAT Gateway is needed. This NAT Gateway is usually placed in one of the public subnets.
 
-## 6. Auto Scaling Group and Launch Template
+- **Route Tables:**
+  - **Public Route Table:** Associated with public subnets, contains a route to the IGW.
+  - **Private Route Table:** Associated with private subnets, contains a route to the NAT Gateway.
 
-### Create Auto Scaling Group
-- Create a launch template and configure the auto scaling group.
+- **Security Groups and Network ACLs:** Set up security groups for instances and Network ACLs for the subnets to control traffic at different layers.
 
-## 7. Target Groups and Load Balancer
+#### 5. **Implementing the VPC in AWS Console**
 
-### Create Target Groups
-- Create 2 target groups for the load balancer.
+- **Create a VPC** with the CIDR block `10.0.0.0/16`.
+- **Create Subnets**:
+  - **3 Public Subnets** with the above CIDRs.
+  - **3 Private Subnets** with the above CIDRs.
+- **Attach an Internet Gateway** to the VPC.
+- **Create a NAT Gateway** in one of the public subnets.
+- **Create Route Tables**:
+  - **Public Route Table** with a route to the Internet Gateway. Associate it with the public subnets.
+  - **Private Route Table** with a route to the NAT Gateway. Associate it with the private subnets.
 
-### Create Load Balancer
-- Setup load balancer with target groups and listener rules.
+### Conclusion
 
-## 8. RDS and Read Replica
-
-### Setup RDS
-1. **Create RDS instance**
-2. **Create Read Replica**
-3. **Execute queries** to setup 2 databases and create user/password for the application.
-4. **Import databases** from S3 bucket.
-
-## 9. S3 Buckets
-
-### Create S3 Buckets
-- Create 3 S3 buckets for different purposes.
-
-## 10. ACM Certificate
-
-### Setup ACM Certificate
-- Request and validate an ACM certificate.
-
-## 11. Custom VPC
-
-### Create Custom VPC
-1. **Private Subnet**: For RDS instances.
-2. **Public Subnet**: For EC2 instances and load balancer.
-
-## 12. Private OpenVPN
-
-### Setup Private OpenVPN
-- Create a server in the VPC to connect private resources.
-
-## 13. Secrets Manager
-
-### Setup Secrets Manager
-1. **Git Clone Credentials**: Store and fetch git clone token.
-2. **Database Credentials**: Store and update database username, password, host, and port.
-
-## 14. Outputs
-
-### Terraform Outputs
-1. **Load Balancer Host**: Output the load balancer hostname.
-2. **All Servers IP with Name**: Output the IP addresses of all servers with their names.
-3. **ACM Record**: Output the ACM record to update in DNS.
-
-## Conclusion
-
-> This setup will provision a fully functional infrastructure for the enterprize-tf-lab project using Terraform, ensuring scalability, security, and manageability.
-
-
-
-
-# ResourcesRequirements:
-- ec2-ami (dashboard, checkout, backend, landing page, magicCheckout, Hooks, Cron)
-- 
+This architecture allows you to have a secure and scalable environment in AWS, with segregation of public and private resources. The CIDR blocks are chosen to provide sufficient IP addresses while maintaining easy scalability.
