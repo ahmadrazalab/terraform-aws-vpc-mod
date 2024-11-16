@@ -1,113 +1,63 @@
-# Enterprize-tf-lab Terraform Setup
 
-This document outlines the steps to create the infrastructure for the enterprize-tf-lab project using Terraform.
+# Custom VPC Module 🌐
 
-## 1. AMI Creation
+Easily create a custom VPC in the **ap-south-1** region, complete with public and private subnets, route tables, and security groups. Perfect for your AWS infrastructure!
 
-### Frontend-application AMI
-1. **Create an instance**
-2. **Install dependencies**
-3. **Setup application**
-4. **Create AMI**
+- 🌍 **Custom VPC**  
+- 🌐 **Public & Private Subnets**  
+- 🚪 **Route Tables**  
+- 🌐 **NAT Gateway & Static IP**  
+- 🔒 **Security Groups**  
+- 🔄 **Internet Gateway**  
 
-### Magic-application AMI
-1. **Create an instance**
-2. **Install dependencies**
-3. **Setup application**
-4. **Create AMI**
+## What Does It Do?
 
-### Backend-application AMI
-1. **Create an instance**
-2. **Install dependencies**
-3. **Setup application**
-4. **Create AMI**
+This module helps you quickly create a secure and scalable VPC setup:
 
-## 2. Keypair
+- **Custom VPC**: A dedicated virtual network with full control over your IP address range.  
+- **Subnets**: Create both public and private subnets for separating your workloads.  
+- **Route Tables**: Automatically configure route tables for routing traffic between subnets.  
+- **NAT Gateway**: Provides outbound internet access for resources in private subnets.  
+- **Security Groups**: Define inbound and outbound traffic rules for your instances.  
+- **Internet Gateway**: Allows instances in public subnets to access the internet.  
 
-### Create a Keypair
-- Generate a keypair for EC2 instances.
+## Getting Started 🚀
 
-## 3. IAM Users and Policies
+### Requirements  
+1. **AWS CLI** installed and configured.  
+2. **Terraform 1.x+** installed.  
+3. **IAM Permissions** for creating VPCs, subnets, NAT Gateways, and route tables.  
 
-### Create IAM Users
-1. **data-s3-keys**: Permissions: `put`, `get`
-2. **logs-s3-keys**: Permissions: `put`, `get`
-3. **uat-s3-keys**: Permissions: `put`, `get`, `delete`
+### Example Use
 
-## 4. EC2 Instances
+```hcl
+module "vpc_setup" {
+  source        = "./custom-vpc-module"
+  region        = "ap-south-1"
+  vpc_cidr      = "10.0.0.0/16"
+  public_subnet_cidr = "10.0.1.0/24"
+  private_subnet_cidr = "10.0.2.0/24"
+  enable_nat_gateway = true
+  enable_internet_gateway = true
+  sg_name        = "my-app-sg"
+}
 
-### Create EC2 Instances from AMI
-- Launch 2 instances from the magic and frontend AMIs.
+```
 
-## 5. Security Groups
+### Outputs  
+- ✅ VPC ID  
+- ✅ Public Subnet IDs  
+- ✅ Private Subnet IDs  
+- ✅ NAT Gateway ID  
+- ✅ Internet Gateway ID  
+- ✅ Security Group ID  
 
-### Create Security Groups
-1. **ec2-sg**: Security group for EC2 instances.
-2. **alb-sg**: Security group for the load balancer.
-3. **rds-sg**: Security group for RDS instances.
+## Why Use This Module?
 
-## 6. Auto Scaling Group and Launch Template
+- **Simple**: Create a full-featured VPC setup with minimal effort.  
+- **Scalable**: Easily extendable with more subnets, route tables, and security groups.  
+- **Secure**: Private and public subnets with robust security groups and internet access control.  
 
-### Create Auto Scaling Group
-- Create a launch template and configure the auto scaling group.
+---
 
-## 7. Target Groups and Load Balancer
-
-### Create Target Groups
-- Create 2 target groups for the load balancer.
-
-### Create Load Balancer
-- Setup load balancer with target groups and listener rules.
-
-## 8. RDS and Read Replica
-
-### Setup RDS
-1. **Create RDS instance**
-2. **Create Read Replica**
-3. **Execute queries** to setup 2 databases and create user/password for the application.
-4. **Import databases** from S3 bucket.
-
-## 9. S3 Buckets
-
-### Create S3 Buckets
-- Create 3 S3 buckets for different purposes.
-
-## 10. ACM Certificate
-
-### Setup ACM Certificate
-- Request and validate an ACM certificate.
-
-## 11. Custom VPC
-
-### Create Custom VPC
-1. **Private Subnet**: For RDS instances.
-2. **Public Subnet**: For EC2 instances and load balancer.
-
-## 12. Private OpenVPN
-
-### Setup Private OpenVPN
-- Create a server in the VPC to connect private resources.
-
-## 13. Secrets Manager
-
-### Setup Secrets Manager
-1. **Git Clone Credentials**: Store and fetch git clone token.
-2. **Database Credentials**: Store and update database username, password, host, and port.
-
-## 14. Outputs
-
-### Terraform Outputs
-1. **Load Balancer Host**: Output the load balancer hostname.
-2. **All Servers IP with Name**: Output the IP addresses of all servers with their names.
-3. **ACM Record**: Output the ACM record to update in DNS.
-
-## Conclusion
-
-> This setup will provision a fully functional infrastructure for the enterprize-tf-lab project using Terraform, ensuring scalability, security, and manageability.
-
-
-
-
-# ResourcesRequirements:
-- ec2-ami (dashboard, checkout, backend, landing page, magicCheckout, Hooks, Cron)
-- 
+For more, visit my blog: [docs.ahmadraza.in](https://docs.ahmadraza.in)  
